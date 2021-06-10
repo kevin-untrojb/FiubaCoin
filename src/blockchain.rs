@@ -6,7 +6,6 @@ pub struct Transaction {
   pub transaction_details: String,
 }
 
-
 pub struct Block {
   pub block_number: u64,
   block_timestamp: i64,
@@ -33,9 +32,27 @@ impl Block {
   }
 }
 
+pub struct Blockchain {
+  blocks: Vec<Block>,
+}
+
+impl Blockchain { 
+  pub fn new() -> Self {
+    Blockchain {
+      blocks: vec![Block::genesis()]
+    }
+  }
+
+  pub fn last_block(self: &Self) -> &Block {
+    self.blocks.last().unwrap()
+  }
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  // Block
 
   #[test]
   fn test_genesis_block_is_the_first_block() {
@@ -64,4 +81,14 @@ mod tests {
 
     assert_eq!("1", genesis.transaction_list[0].transaction_id)
   }
+
+  // Blockchain
+  
+  #[test]
+  fn test_new_creates_a_block_chain_with_a_genesis_block() {
+    let blockchain = Blockchain::new();
+
+    assert_eq!(1, blockchain.last_block().block_number)
+  }
+
 }
