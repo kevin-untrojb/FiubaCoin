@@ -1,5 +1,4 @@
-mod block;
-mod transaction;
+mod blockchain;
 
 fn main() {
     println!("Welcome to Fiuba Coin");
