@@ -98,6 +98,11 @@ mod tests {
     assert_eq!("1", genesis.transaction_list[0].transaction_id)
   }
 
+  #[test]
+  fn test_mining_new_block() {
+    // TODO
+  }
+
   // Blockchain
 
   #[test]
@@ -130,5 +135,10 @@ mod tests {
 
     assert_eq!(2, last_block.block_number);
     assert_eq!(Block::genesis().get_hash(), last_block.previous_block_hash);
+  }
+
+  #[test]
+  fn test_adding_a_block_to_the_blockchain_rewards_the_winner() {
+    // TODO
   }
 }
