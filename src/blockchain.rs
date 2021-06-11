@@ -1,13 +1,17 @@
 use chrono::Utc;
+use crypto_hash::{hex_digest, Algorithm};
+use serde::{Serialize, Deserialize};
 
+#[derive(Serialize, Deserialize)]
 pub struct Transaction {
   pub transaction_id: String,
   pub transaction_timestamp: i64,
   pub transaction_details: String,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Block {
-  pub block_number: u64,
+  pub block_number: usize,
   block_timestamp: i64,
   pub block_nonce: u64,
   pub transaction_list: Vec<Transaction>,
@@ -30,6 +34,14 @@ impl Block {
         previous_block_hash: String::from("0"),
     }
   }
+
+  pub fn serialize(self: &Self) -> String {
+    serde_json::to_string(&self).unwrap()
+  }
+
+  pub fn get_hash(self: &Self) -> String {
+    hex_digest(Algorithm::SHA256, self.serialize().as_bytes())
+  }
 }
 
 pub struct Blockchain {
@@ -45,6 +57,10 @@ impl Blockchain {
 
   pub fn last_block(self: &Self) -> &Block {
     self.blocks.last().unwrap()
+  }
+
+  pub fn add_block(self: &mut Self, block: Block) {
+    self.blocks.push(block);
   }
 }
 
@@ -83,12 +99,36 @@ mod tests {
   }
 
   // Blockchain
-  
+
   #[test]
-  fn test_new_creates_a_block_chain_with_a_genesis_block() {
+  fn test_new_creates_a_blockchain_with_a_genesis_block() {
     let blockchain = Blockchain::new();
 
     assert_eq!(1, blockchain.last_block().block_number)
   }
 
+  #[test]
+  fn test_adding_a_transaction_to_the_blockchain() {
+    let mut blockchain = Blockchain::new();
+    let transaction = Transaction {
+       transaction_id: String::from("2"),
+       transaction_timestamp: Utc::now().timestamp(),
+       transaction_details: String::from("a FiubaCoin"),
+    };
+
+    let block = Block {
+      block_number: 2,
+      block_timestamp: Utc::now().timestamp(),
+      block_nonce: 0,
+      transaction_list: vec![transaction],
+      previous_block_hash: blockchain.last_block().get_hash(),
+    };
+
+    blockchain.add_block(block);
+
+    let last_block = blockchain.last_block();
+
+    assert_eq!(2, last_block.block_number);
+    assert_eq!(Block::genesis().get_hash(), last_block.previous_block_hash);
+  }
 }
