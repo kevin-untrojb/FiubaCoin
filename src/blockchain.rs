@@ -98,13 +98,15 @@ impl Blockchain {
       amount: self.reward
     };
 
-    let new_block = Block {
+    let mut new_block = Block {
       block_number: self.blocks.len() + 1,
       block_timestamp: Utc::now().timestamp(),
       block_nonce: 0,
       transaction_list: vec![reward_transaction],
       previous_block_hash: self.blocks.last().unwrap().get_hash(),
     };
+
+    new_block.transaction_list.append(&mut self.current_transaction_list);
 
     self.blocks.push(new_block);
   }
@@ -202,5 +204,23 @@ mod tests {
     let last_block = blockchain.blocks.last().unwrap();
 
     assert_eq!(100, last_block.transaction_list[0].amount);
+  }
+
+  #[test]
+  fn test_generating_a_block_pushes_all_current_transactions() {
+    let mut blockchain = Blockchain::new();
+
+    blockchain.new_transaction(String::from("a FiubaCoin goes somewhere"), 1);
+    blockchain.new_transaction(String::from("a FiubaCoin goes somewhere else"), 10);
+
+    blockchain.generate_new_block();
+
+    let last_block = blockchain.blocks.last().unwrap();
+    let last_block_transaction_list = &last_block.transaction_list;
+
+    assert_eq!(3, last_block_transaction_list.len());
+    assert_eq!(100, last_block_transaction_list[0].amount);
+    assert_eq!(1, last_block_transaction_list[1].amount);
+    assert_eq!(10, last_block_transaction_list[2].amount);
   }
 }
