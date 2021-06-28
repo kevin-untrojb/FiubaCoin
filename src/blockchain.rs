@@ -50,12 +50,14 @@ impl Block {
 
 pub struct Blockchain {
   blocks: Vec<Block>,
+  current_transaction_list: Vec<Transaction>
 }
 
 impl Blockchain { 
   pub fn new() -> Self {
     Blockchain {
-      blocks: vec![Block::genesis()]
+      blocks: vec![Block::genesis()],
+      current_transaction_list: vec![]
     }
   }
 
@@ -64,8 +66,7 @@ impl Blockchain {
   }
 
   pub fn new_transaction(self: &mut Self, transaction_details: String) {
-    let last_block_index = self.blocks.len() - 1;
-    let last_transaction_id = self.blocks[last_block_index].transaction_list.last().unwrap().transaction_id.parse::<i32>().unwrap();
+    let last_transaction_id = self.blocks[self.blocks.len() - 1].transaction_list.last().unwrap().transaction_id.parse::<i32>().unwrap();
 
     let new_transaction = Transaction {
       transaction_id: (last_transaction_id + 1).to_string(),
@@ -73,7 +74,7 @@ impl Blockchain {
       transaction_timestamp: Utc::now().timestamp(),
     };
 
-    self.blocks[last_block_index].add_transaction(new_transaction);
+    self.current_transaction_list.push(new_transaction);
   }
 }
 
@@ -135,12 +136,12 @@ mod tests {
   }
 
   #[test]
-  fn test_adding_a_transaction_to_the_blockchain_stores_it_in_the_current_block() {
+  fn test_adding_a_transaction_to_the_blockchain_stores_it_in_the_current_transaction_vector() {
     let mut blockchain = Blockchain::new();
 
     blockchain.new_transaction(String::from("a FiubaCoin goes somewhere"));
 
-    assert_eq!(String::from("a FiubaCoin goes somewhere"), blockchain.last_block().transaction_list[1].transaction_details);
+    assert_eq!(String::from("a FiubaCoin goes somewhere"), blockchain.current_transaction_list[0].transaction_details);
   }
 
   #[test]
