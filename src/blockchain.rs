@@ -7,6 +7,7 @@ pub struct Transaction {
   pub transaction_id: String,
   pub transaction_timestamp: i64,
   pub transaction_details: String,
+  pub amount: i64,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -25,6 +26,7 @@ impl Block {
         transaction_id: String::from("1"),
         transaction_details: String::from("This is dummy transaction as genesis block has no transactions"),
         transaction_timestamp: Utc::now().timestamp(),
+        amount: 0, // Genesis has no reward? 
     };
     Block {
         block_number: 1,
@@ -50,14 +52,16 @@ impl Block {
 
 pub struct Blockchain {
   blocks: Vec<Block>,
-  current_transaction_list: Vec<Transaction>
+  current_transaction_list: Vec<Transaction>,
+  reward: i64,
 }
 
-impl Blockchain { 
+impl Blockchain {
   pub fn new() -> Self {
     Blockchain {
       blocks: vec![Block::genesis()],
-      current_transaction_list: vec![]
+      current_transaction_list: vec![],
+      reward: 100,
     }
   }
 
@@ -65,20 +69,44 @@ impl Blockchain {
     self.blocks.last().unwrap()
   }
 
-  pub fn new_transaction(self: &mut Self, transaction_details: String) {
+  pub fn generate_transaction_id(self: &Self) -> String {
     let last_transaction_id = self.blocks[self.blocks.len() - 1].transaction_list.last().unwrap().transaction_id.parse::<i32>().unwrap();
     let transaction_id_to_assign = match self.current_transaction_list.last() {
       Some(transaction) => transaction.transaction_id.parse::<i32>().unwrap(),
       None => last_transaction_id
     };
 
+    return (transaction_id_to_assign + 1).to_string()
+  }
+
+  pub fn new_transaction(self: &mut Self, transaction_details: String, amount: i64) {
     let new_transaction = Transaction {
-      transaction_id: (transaction_id_to_assign + 1).to_string(),
+      transaction_id: self.generate_transaction_id(),
       transaction_details: transaction_details,
       transaction_timestamp: Utc::now().timestamp(),
+      amount: amount,
     };
 
     self.current_transaction_list.push(new_transaction);
+  }
+
+  pub fn generate_new_block(self: &mut Self) {
+    let reward_transaction = Transaction {
+      transaction_id: self.generate_transaction_id(),
+      transaction_details: String::from("reward"),
+      transaction_timestamp: Utc::now().timestamp(),
+      amount: self.reward
+    };
+
+    let new_block = Block {
+      block_number: self.blocks.len() + 1,
+      block_timestamp: Utc::now().timestamp(),
+      block_nonce: 0,
+      transaction_list: vec![reward_transaction],
+      previous_block_hash: self.blocks.last().unwrap().get_hash(),
+    };
+
+    self.blocks.push(new_block);
   }
 }
 
@@ -116,11 +144,6 @@ mod tests {
     assert_eq!("1", genesis.transaction_list[0].transaction_id)
   }
 
-  #[test]
-  fn test_mining_new_block() {
-    // TODO
-  }
-
   // Blockchain
 
   #[test]
@@ -134,7 +157,7 @@ mod tests {
   fn test_adding_a_transaction_to_the_blockchain_does_not_create_new_block() {
     let mut blockchain = Blockchain::new();
 
-    blockchain.new_transaction(String::from("a FiubaCoin goes somewhere"));
+    blockchain.new_transaction(String::from("a FiubaCoin goes somewhere"), 1);
 
     assert_eq!(1, blockchain.blocks.len());
   }
@@ -143,7 +166,7 @@ mod tests {
   fn test_adding_a_transaction_to_the_blockchain_stores_it_in_the_current_transaction_vector() {
     let mut blockchain = Blockchain::new();
 
-    blockchain.new_transaction(String::from("a FiubaCoin goes somewhere"));
+    blockchain.new_transaction(String::from("a FiubaCoin goes somewhere"), 1);
 
     assert_eq!(String::from("a FiubaCoin goes somewhere"), blockchain.current_transaction_list[0].transaction_details);
   }
@@ -152,15 +175,32 @@ mod tests {
   fn test_adding_a_transaction_uses_incremental_id() {
     let mut blockchain = Blockchain::new();
 
-    blockchain.new_transaction(String::from("a FiubaCoin goes somewhere"));
-    blockchain.new_transaction(String::from("a FiubaCoin goes somewhere else"));
+    blockchain.new_transaction(String::from("a FiubaCoin goes somewhere"), 1);
+    blockchain.new_transaction(String::from("a FiubaCoin goes somewhere else"), 1);
 
     assert_eq!("2", blockchain.current_transaction_list[0].transaction_id);
     assert_eq!("3", blockchain.current_transaction_list[1].transaction_id);
   }
 
   #[test]
-  fn test_adding_a_block_to_the_blockchain_rewards_the_winner() {
-    // TODO
+  fn test_adding_a_transaction_sets_correct_amount() {
+    let mut blockchain = Blockchain::new();
+
+    blockchain.new_transaction(String::from("a FiubaCoin goes somewhere"), 1);
+    blockchain.new_transaction(String::from("a FiubaCoin goes somewhere else"), 10);
+
+    assert_eq!(1, blockchain.current_transaction_list[0].amount);
+    assert_eq!(10, blockchain.current_transaction_list[1].amount);
+  }
+
+  #[test]
+  fn test_generating_a_block_pushes_a_reward_transaction() {
+    let mut blockchain = Blockchain::new();
+
+    blockchain.generate_new_block();
+
+    let last_block = blockchain.blocks.last().unwrap();
+
+    assert_eq!(100, last_block.transaction_list[0].amount);
   }
 }
