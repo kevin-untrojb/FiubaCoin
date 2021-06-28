@@ -42,6 +42,10 @@ impl Block {
   pub fn get_hash(self: &Self) -> String {
     hex_digest(Algorithm::SHA256, self.serialize().as_bytes())
   }
+
+  pub fn add_transaction(self: &mut Self, transaction: Transaction) {
+    self.transaction_list.push(transaction);
+  }
 }
 
 pub struct Blockchain {
@@ -59,8 +63,17 @@ impl Blockchain {
     self.blocks.last().unwrap()
   }
 
-  pub fn add_block(self: &mut Self, block: Block) {
-    self.blocks.push(block);
+  pub fn new_transaction(self: &mut Self, transaction_details: String) {
+    let last_block_index = self.blocks.len() - 1;
+    let last_transaction_id = self.blocks[last_block_index].transaction_list.last().unwrap().transaction_id.parse::<i32>().unwrap();
+
+    let new_transaction = Transaction {
+      transaction_id: (last_transaction_id + 1).to_string(),
+      transaction_details: transaction_details,
+      transaction_timestamp: Utc::now().timestamp(),
+    };
+
+    self.blocks[last_block_index].add_transaction(new_transaction);
   }
 }
 
@@ -113,28 +126,21 @@ mod tests {
   }
 
   #[test]
-  fn test_adding_a_transaction_to_the_blockchain() {
+  fn test_adding_a_transaction_to_the_blockchain_does_not_create_new_block() {
     let mut blockchain = Blockchain::new();
-    let transaction = Transaction {
-       transaction_id: String::from("2"),
-       transaction_timestamp: Utc::now().timestamp(),
-       transaction_details: String::from("a FiubaCoin"),
-    };
 
-    let block = Block {
-      block_number: 2,
-      block_timestamp: Utc::now().timestamp(),
-      block_nonce: 0,
-      transaction_list: vec![transaction],
-      previous_block_hash: blockchain.last_block().get_hash(),
-    };
+    blockchain.new_transaction(String::from("a FiubaCoin goes somewhere"));
 
-    blockchain.add_block(block);
+    assert_eq!(1, blockchain.blocks.len());
+  }
 
-    let last_block = blockchain.last_block();
+  #[test]
+  fn test_adding_a_transaction_to_the_blockchain_stores_it_in_the_current_block() {
+    let mut blockchain = Blockchain::new();
 
-    assert_eq!(2, last_block.block_number);
-    assert_eq!(Block::genesis().get_hash(), last_block.previous_block_hash);
+    blockchain.new_transaction(String::from("a FiubaCoin goes somewhere"));
+
+    assert_eq!(String::from("a FiubaCoin goes somewhere"), blockchain.last_block().transaction_list[1].transaction_details);
   }
 
   #[test]
