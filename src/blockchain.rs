@@ -106,6 +106,11 @@ impl Blockchain {
       previous_block_hash: self.blocks.last().unwrap().get_hash(),
     };
 
+    /* 
+      TODO: aca deberiamos hacer el proof of work multithreading, el primer nodo que encuentre el hash obtiene
+      la posibilidad de meter un nuevo block al blockchain y obtener un reward
+    */
+
     new_block.transaction_list.append(&mut self.current_transaction_list);
 
     self.blocks.push(new_block);
