@@ -67,9 +67,13 @@ impl Blockchain {
 
   pub fn new_transaction(self: &mut Self, transaction_details: String) {
     let last_transaction_id = self.blocks[self.blocks.len() - 1].transaction_list.last().unwrap().transaction_id.parse::<i32>().unwrap();
+    let transaction_id_to_assign = match self.current_transaction_list.last() {
+      Some(transaction) => transaction.transaction_id.parse::<i32>().unwrap(),
+      None => last_transaction_id
+    };
 
     let new_transaction = Transaction {
-      transaction_id: (last_transaction_id + 1).to_string(),
+      transaction_id: (transaction_id_to_assign + 1).to_string(),
       transaction_details: transaction_details,
       transaction_timestamp: Utc::now().timestamp(),
     };
@@ -142,6 +146,17 @@ mod tests {
     blockchain.new_transaction(String::from("a FiubaCoin goes somewhere"));
 
     assert_eq!(String::from("a FiubaCoin goes somewhere"), blockchain.current_transaction_list[0].transaction_details);
+  }
+
+  #[test]
+  fn test_adding_a_transaction_uses_incremental_id() {
+    let mut blockchain = Blockchain::new();
+
+    blockchain.new_transaction(String::from("a FiubaCoin goes somewhere"));
+    blockchain.new_transaction(String::from("a FiubaCoin goes somewhere else"));
+
+    assert_eq!("2", blockchain.current_transaction_list[0].transaction_id);
+    assert_eq!("3", blockchain.current_transaction_list[1].transaction_id);
   }
 
   #[test]
