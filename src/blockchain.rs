@@ -100,7 +100,7 @@ impl Blockchain {
       amount: self.reward
     };
 
-    let mut new_block = Block {
+    let new_block = Block {
       block_number: self.blocks.len() + 1,
       block_timestamp: Utc::now().timestamp(),
       block_nonce: 0,
@@ -108,16 +108,18 @@ impl Blockchain {
       previous_block_hash: self.blocks.last().unwrap().get_hash(),
     };
 
-    new_block.transaction_list.append(&mut self.current_transaction_list);
+    let mut mined_block = self.proof_of_work(new_block);
 
-    self.blocks.push(new_block);
+    mined_block.transaction_list.append(&mut self.current_transaction_list);
+
+    self.blocks.push(mined_block);
   }
 
   pub fn set_difficulty(self: &mut Self, difficulty: i32) {
     self.difficulty = difficulty;
   }
 
-  pub fn proof_of_work(self: &Self, mut block: Block) -> String {
+  pub fn proof_of_work(self: &Self, mut block: Block) -> Block {
     loop {
       let hash = block.get_hash();
       let leading_zeros = &hash[0..self.difficulty as usize];
@@ -126,7 +128,7 @@ impl Blockchain {
           if value != 0 {
             block.block_nonce += 1;
           } else {
-            return hash;
+            return block;
           }
         }
         Err(_) => {
@@ -264,9 +266,9 @@ mod tests {
       previous_block_hash: String::from("00"),
     };
 
-    let hash = blockchain.proof_of_work(new_block);
+    let mined_block = blockchain.proof_of_work(new_block);
 
-    assert_eq!(String::from("00"), hash[0..2]);
+    assert_eq!(String::from("0"), mined_block.get_hash()[0..1]);
   }
 
   #[test]
@@ -281,9 +283,9 @@ mod tests {
       previous_block_hash: String::from("00"),
     };
 
-    let hash = blockchain.proof_of_work(new_block);
+    let mined_block = blockchain.proof_of_work(new_block);
 
-    assert_eq!(String::from("0"), hash[0..1]);
+    assert_eq!(String::from("0"), mined_block.get_hash()[0..1]);
   }
 
   #[test]
@@ -300,8 +302,8 @@ mod tests {
       previous_block_hash: String::from("00"),
     };
 
-    let hash = blockchain.proof_of_work(new_block);
+    let mined_block = blockchain.proof_of_work(new_block);
 
-    assert_eq!(String::from("00000"), hash[0..5]);
+    assert_eq!(String::from("0"), mined_block.get_hash()[0..1]);
   }
 }
