@@ -113,6 +113,7 @@ impl Blockchain {
     mined_block.transaction_list.append(&mut self.current_transaction_list);
 
     self.blocks.push(mined_block);
+    self.difficulty += 1;
   }
 
   pub fn set_difficulty(self: &mut Self, difficulty: i32) {
