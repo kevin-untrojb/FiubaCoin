@@ -54,6 +54,7 @@ pub struct Blockchain {
   blocks: Vec<Block>,
   current_transaction_list: Vec<Transaction>,
   reward: i64,
+  difficulty: i32,
 }
 
 impl Blockchain {
@@ -62,6 +63,7 @@ impl Blockchain {
       blocks: vec![Block::genesis()],
       current_transaction_list: vec![],
       reward: 100,
+      difficulty: 1
     }
   }
 
@@ -106,14 +108,33 @@ impl Blockchain {
       previous_block_hash: self.blocks.last().unwrap().get_hash(),
     };
 
-    /* 
-      TODO: aca deberiamos hacer el proof of work multithreading, el primer nodo que encuentre el hash obtiene
-      la posibilidad de meter un nuevo block al blockchain y obtener un reward
-    */
-
     new_block.transaction_list.append(&mut self.current_transaction_list);
 
     self.blocks.push(new_block);
+  }
+
+  pub fn set_difficulty(self: &mut Self, difficulty: i32) {
+    self.difficulty = difficulty;
+  }
+
+  pub fn proof_of_work(self: &Self, mut block: Block) -> String {
+    loop {
+      let hash = block.get_hash();
+      let leading_zeros = &hash[0..self.difficulty as usize];
+      match leading_zeros.parse::<u32>() {
+        Ok(value) => {
+          if value != 0 {
+            block.block_nonce += 1;
+          } else {
+            return hash;
+          }
+        }
+        Err(_) => {
+          block.block_nonce += 1;
+          continue;
+        }
+      }
+    }
   }
 }
 
@@ -227,5 +248,60 @@ mod tests {
     assert_eq!(100, last_block_transaction_list[0].amount);
     assert_eq!(1, last_block_transaction_list[1].amount);
     assert_eq!(10, last_block_transaction_list[2].amount);
+  }
+
+  #[test]
+  fn test_proof_of_work_returns_block_hash_with_difficulty_amount_of_leading_zeros() {
+    let mut blockchain = Blockchain::new();
+
+    blockchain.set_difficulty(2);
+
+    let new_block = Block {
+      block_number: 1,
+      block_timestamp: Utc::now().timestamp(),
+      block_nonce: 0,
+      transaction_list: vec![],
+      previous_block_hash: String::from("00"),
+    };
+
+    let hash = blockchain.proof_of_work(new_block);
+
+    assert_eq!(String::from("00"), hash[0..2]);
+  }
+
+  #[test]
+  fn test_proof_of_work_returns_has_difficulty_1_by_default() {
+    let blockchain = Blockchain::new();
+
+    let new_block = Block {
+      block_number: 1,
+      block_timestamp: Utc::now().timestamp(),
+      block_nonce: 0,
+      transaction_list: vec![],
+      previous_block_hash: String::from("00"),
+    };
+
+    let hash = blockchain.proof_of_work(new_block);
+
+    assert_eq!(String::from("0"), hash[0..1]);
+  }
+
+  #[test]
+  fn test_proof_of_work_with_higher_difficulty() {
+    let mut blockchain = Blockchain::new();
+
+    blockchain.set_difficulty(5);
+
+    let new_block = Block {
+      block_number: 1,
+      block_timestamp: Utc::now().timestamp(),
+      block_nonce: 0,
+      transaction_list: vec![],
+      previous_block_hash: String::from("00"),
+    };
+
+    let hash = blockchain.proof_of_work(new_block);
+
+    assert_eq!(String::from("00000"), hash[0..5]);
   }
 }
