@@ -2,7 +2,7 @@ use chrono::Utc;
 use crypto_hash::{hex_digest, Algorithm};
 use serde::{Serialize, Deserialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Transaction {
   pub transaction_id: String,
   pub transaction_timestamp: i64,
@@ -10,7 +10,7 @@ pub struct Transaction {
   pub amount: i64,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Block {
   pub block_number: usize,
   block_timestamp: i64,
@@ -36,7 +36,7 @@ impl Block {
         previous_block_hash: String::from("0"),
     }
   }
-
+  
   pub fn serialize(self: &Self) -> String {
     serde_json::to_string(&self).unwrap()
   }
@@ -50,6 +50,7 @@ impl Block {
   }
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Blockchain {
   blocks: Vec<Block>,
   current_transaction_list: Vec<Transaction>,
@@ -63,7 +64,7 @@ impl Blockchain {
       blocks: vec![Block::genesis()],
       current_transaction_list: vec![],
       reward: 100,
-      difficulty: 1
+      difficulty: 5
     }
   }
 

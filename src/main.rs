@@ -10,7 +10,31 @@ fn main() {
     let mut difficulty = String::new();
     let mut choice = String::new();
 
+    /*
+    let mut block = blockchain::Block::genesis();
+
+    println!("{}", block.serialize());
+    println!("Perno test");
+
+    let mut blockchain = blockchain::Blockchain::new();
+
+    println!("{:#?}", &blockchain);
+
+    println!("##########################");
+    blockchain.new_transaction(String::from("Transaction test"), 16);
+
+    println!("{:#?}", &blockchain);
+    println!("##########################");
+
+    blockchain.generate_new_block();
+    println!("{:#?}", &blockchain);
+    */
+
+    let mut blockchain = blockchain::Blockchain::new();
+    
     loop{
+        println!("{:#?}", &blockchain);
+
         println!("Menu");
         println!("1) New Transaction");
         println!("2) Mine Block");
@@ -28,7 +52,7 @@ fn main() {
                 process::exit(0);
             },
             1 => {
-                process_transaction();
+                process_transaction(&mut blockchain);
             },
             2 => {
                 println!("Here we process the mine block");
@@ -41,6 +65,18 @@ fn main() {
     }
 }
 
-fn process_transaction() {
-    println!("Here we process the transacttion");
+fn process_transaction(blockchain: &mut blockchain::Blockchain) {
+    //println!("Here we process the transacttion");
+    let mut details = String::new();
+    let mut amount = String::new();
+
+    print!("Enter transaction details: ");
+    io::stdout().flush();
+    io::stdin().read_line(&mut details);
+
+    print!("Enter amount: ");
+    io::stdout().flush();
+    io::stdin().read_line(&mut amount);
+
+    blockchain.new_transaction(details.trim().to_string(), amount.trim().parse().unwrap());
 }
