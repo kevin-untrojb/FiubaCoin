@@ -54,7 +54,7 @@ impl Block {
 pub struct Blockchain {
   blocks: Vec<Block>,
   current_transaction_list: Vec<Transaction>,
-  reward: i64,
+  pub reward: i64,
   difficulty: i32,
 }
 
@@ -70,6 +70,10 @@ impl Blockchain {
 
   pub fn last_block(self: &Self) -> &Block {
     self.blocks.last().unwrap()
+  }
+
+  pub fn change_reward(&mut self, reward: i64) {
+    self.reward = reward;
   }
 
   pub fn generate_transaction_id(self: &Self) -> String {

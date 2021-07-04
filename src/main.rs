@@ -70,7 +70,12 @@ fn main() {
                 }
             },
             3 => {
-                println!("Here we process the change reward");
+                let mut reward = String::new();
+                print!("Enter new reward: ");
+                io::stdout().flush();
+                reward.clear();
+                io::stdin().read_line(&mut reward);
+                blockchain.change_reward(reward.trim().parse().unwrap());
             }
             4 => {
                 println!("Current Blockchain:");
