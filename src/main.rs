@@ -33,7 +33,11 @@ fn main() {
     let mut blockchain = blockchain::Blockchain::new();
     
     loop{
+        println!();
+        println!("Current Blockchain:");
         println!("{:#?}", &blockchain);
+        //println!("{:#<30}");
+        println!("");
 
         println!("Menu");
         println!("1) New Transaction");
@@ -55,7 +59,8 @@ fn main() {
                 process_transaction(&mut blockchain);
             },
             2 => {
-                println!("Here we process the mine block");
+                blockchain.generate_new_block();
+                //println!("Here we process the mine block");
             },
             3 => {
                 println!("Here we process the change reward");

@@ -64,7 +64,7 @@ impl Blockchain {
       blocks: vec![Block::genesis()],
       current_transaction_list: vec![],
       reward: 100,
-      difficulty: 5
+      difficulty: 1
     }
   }
 
@@ -94,6 +94,12 @@ impl Blockchain {
   }
 
   pub fn generate_new_block(self: &mut Self) {
+    /*
+    if self.current_transaction_list.len() == 0 {
+      return false;
+    }
+    */
+
     let reward_transaction = Transaction {
       transaction_id: self.generate_transaction_id(),
       transaction_details: String::from("reward"),
@@ -115,6 +121,8 @@ impl Blockchain {
 
     self.blocks.push(mined_block);
     self.difficulty += 1;
+
+    //true;
   }
 
   pub fn set_difficulty(self: &mut Self, difficulty: i32) {
