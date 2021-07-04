@@ -93,12 +93,16 @@ impl Blockchain {
     self.current_transaction_list.push(new_transaction);
   }
 
-  pub fn generate_new_block(self: &mut Self) {
-    /*
+  pub fn is_transaction_empty(self: &mut Self) -> bool {
+    return self.current_transaction_list.is_empty();
+  }
+
+  pub fn generate_new_block(self: &mut Self) -> bool {
+    
     if self.current_transaction_list.len() == 0 {
       return false;
     }
-    */
+    
 
     let reward_transaction = Transaction {
       transaction_id: self.generate_transaction_id(),
@@ -122,7 +126,7 @@ impl Blockchain {
     self.blocks.push(mined_block);
     self.difficulty += 1;
 
-    //true;
+    return true;
   }
 
   pub fn set_difficulty(self: &mut Self, difficulty: i32) {

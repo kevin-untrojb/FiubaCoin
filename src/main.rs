@@ -59,8 +59,15 @@ fn main() {
                 process_transaction(&mut blockchain);
             },
             2 => {
-                blockchain.generate_new_block();
-                //println!("Here we process the mine block");
+                match blockchain.is_transaction_empty() {
+                    true => {
+                        println!("No transactions to Mine...Press enter to continue");
+                        io::stdin().read_line(&mut choice);
+                    },
+                    false => {
+                        blockchain.generate_new_block();
+                    }
+                }
             },
             3 => {
                 println!("Here we process the change reward");
