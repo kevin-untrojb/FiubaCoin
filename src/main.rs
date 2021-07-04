@@ -34,8 +34,7 @@ fn main() {
     
     loop{
         println!();
-        println!("Current Blockchain:");
-        println!("{:#?}", &blockchain);
+        
         //println!("{:#<30}");
         println!("");
 
@@ -43,6 +42,7 @@ fn main() {
         println!("1) New Transaction");
         println!("2) Mine Block");
         println!("3) Change Reward");
+        println!("4) Show current blockchain");
         println!("0) Exit");
         println!("Enter your choice: ");
         io::stdout().flush();
@@ -72,6 +72,10 @@ fn main() {
             3 => {
                 println!("Here we process the change reward");
             }
+            4 => {
+                println!("Current Blockchain:");
+                println!("{:#?}", &blockchain);
+            },
             _ => println!("Invalid option please retry"),
         }
     }
