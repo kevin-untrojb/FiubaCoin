@@ -1,8 +1,15 @@
 use chrono::Utc;
 use crypto_hash::{hex_digest, Algorithm};
 use serde::{Serialize, Deserialize};
+use std::thread::{sleep};
+use std::time::{Duration};
+use std::sync::{Condvar, Mutex, Arc};
+use crate::logger::{log};
+use rand::Rng;
+use std::thread;
+use std::sync::atomic::{AtomicBool, Ordering};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Transaction {
   pub transaction_id: String,
   pub transaction_timestamp: i64,
@@ -10,7 +17,7 @@ pub struct Transaction {
   pub amount: i64,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Block {
   pub block_number: usize,
   block_timestamp: i64,
@@ -52,7 +59,7 @@ impl Block {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Blockchain {
-  blocks: Vec<Block>,
+  pub blocks: Vec<Block>,
   current_transaction_list: Vec<Transaction>,
   pub reward: i64,
   difficulty: i32,
@@ -137,10 +144,77 @@ impl Blockchain {
     self.difficulty = difficulty;
   }
 
-  pub fn proof_of_work(self: &Self, mut block: Block) -> Block {
+  pub fn proof_of_work(self: &Self, mut original_block: Block) -> Block {
+    
+    let mut miners = vec![];
+    
+    let mut _found = Arc::new(AtomicBool::new(false));
+
+    for i in 0..2 {
+      let found = _found.clone();
+      let mut block = original_block.clone();
+      let difficulty = self.difficulty.clone();
+      let join_handle: thread::JoinHandle<(Option<u64>)> = thread::spawn( move || {
+
+      //println!("This is thread number {}", i);
+      //println!("{} Referencia a Found: {:p}", i, &test);
+      //return i;
+        let mut rng = rand::thread_rng();
+        while ! found.load(Ordering::Relaxed) {
+          let hash = block.get_hash();
+          let leading_zeros = &hash[0..difficulty as usize];
+          log(format!("[Miner-{}] Obtained hash : {}", i, hash));
+              
+          let random_sleep: u64 = rng.gen_range(100, 500);
+          log(format!("[Miner-{}] Va a hacer un sleep de  {}", i, random_sleep));
+          //sleep(Duration::from_millis(random_sleep));
+          
+          match leading_zeros.parse::<u32>() {
+            Ok(value) => {
+              if value != 0 {
+                block.block_nonce += 1;
+              } else {
+                if ! found.load(Ordering::Relaxed) {
+                  println!("Winner Miner is {}", i);
+                  found.swap(true, Ordering::Relaxed);
+                  return Some(block.block_nonce);
+                }
+              }
+              }
+              Err(_) => {
+                block.block_nonce += 1;
+                continue;
+              }
+            }
+        }
+        return None;
+      });
+      miners.push(join_handle);  
+    };
+
+    for miner in miners {
+      let x = miner.join();
+      match x {
+        Ok(result) => {
+          //println!("MAIN {}", result);
+          //original_block.block_nonce = v;
+          match result {
+            Some(x) => original_block.block_nonce = x,
+            None => ()
+          }
+        }
+        Err(e) => { println!( "Error: {:?}", e ); },
+      }
+    }
+
+    /*
     loop {
       let hash = block.get_hash();
       let leading_zeros = &hash[0..self.difficulty as usize];
+      log(format!("[Miner] Obtained hash : {}", hash));
+              
+      let random_sleep: u64 = rng.gen_range(100, 500);
+      sleep(Duration::from_millis(random_sleep));
       match leading_zeros.parse::<u32>() {
         Ok(value) => {
           if value != 0 {
@@ -155,6 +229,8 @@ impl Blockchain {
         }
       }
     }
+    */
+    return original_block;
   }
 }
 

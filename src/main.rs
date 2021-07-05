@@ -1,10 +1,14 @@
 mod blockchain;
+mod logger;
 
 use std::io;
 use std::process;
 use std::io::Write;
 
+
 fn main() {
+    logger::init(true);
+    logger::log(format!("[Main] Program Start"));
     println!("Welcome to Fiuba Coin");
     let mut miner_addr = String::new();
     let mut difficulty = String::new();
@@ -31,7 +35,18 @@ fn main() {
     */
 
     let mut blockchain = blockchain::Blockchain::new();
-    
+
+    /*
+    let genesis = &blockchain.blocks[0];
+    println!("Bloque genesis: {:p}", &genesis);
+    println!("{:#?}", &genesis);
+
+    let mut copia_bloque = genesis.clone();
+    println!("Bloque copia: {:p}", &copia_bloque);
+    println!("{:#?}", &copia_bloque);
+
+    return;
+    */
     loop{
         println!();
         
