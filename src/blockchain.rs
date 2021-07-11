@@ -63,6 +63,7 @@ pub struct Blockchain {
   current_transaction_list: Vec<Transaction>,
   pub reward: i64,
   difficulty: i32,
+  miners: u32,
 }
 
 impl Blockchain {
@@ -71,7 +72,8 @@ impl Blockchain {
       blocks: vec![Block::genesis()],
       current_transaction_list: vec![],
       reward: 100,
-      difficulty: 1
+      difficulty: 1,
+      miners: 1,
     }
   }
 
@@ -144,13 +146,17 @@ impl Blockchain {
     self.difficulty = difficulty;
   }
 
+  pub fn set_miners(self: &mut Self, miners: u32) {
+    self.miners = miners;
+  }
+
   pub fn proof_of_work(self: &Self, mut original_block: Block) -> Block {
     
     let mut miners = vec![];
     
     let mut _found = Arc::new(AtomicBool::new(false));
 
-    for i in 0..2 {
+    for i in 0..self.miners {
       let found = _found.clone();
       let mut block = original_block.clone();
       let difficulty = self.difficulty.clone();

@@ -47,6 +47,7 @@ fn main() {
 
     return;
     */
+    
     loop{
         println!();
         
@@ -57,7 +58,8 @@ fn main() {
         println!("1) New Transaction");
         println!("2) Mine Block");
         println!("3) Change Reward");
-        println!("4) Show current blockchain");
+        println!("4) Change Miners Ammount");
+        println!("5) Show current blockchain");
         println!("0) Exit");
         println!("Enter your choice: ");
         io::stdout().flush();
@@ -91,8 +93,16 @@ fn main() {
                 reward.clear();
                 io::stdin().read_line(&mut reward);
                 blockchain.change_reward(reward.trim().parse().unwrap());
-            }
+            },
             4 => {
+                let mut miners = String::new();
+                print!("Enter Miners quantity: ");
+                io::stdout().flush();
+                miners.clear();
+                io::stdin().read_line(&mut miners);
+                blockchain.set_miners(miners.trim().parse().unwrap());
+            },
+            5 => {
                 println!("Current Blockchain:");
                 println!("{:#?}", &blockchain);
             },
