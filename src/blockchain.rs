@@ -162,7 +162,7 @@ impl Blockchain {
       let leading_zeros = &hash[0..self.difficulty as usize];
       log(format!("[Miner] Obtained hash : {}", hash));
               
-      let random_sleep: u64 = rng.gen_range(100, 500);
+      let random_sleep: u64 = rng.gen_range(10, 200);
       sleep(Duration::from_millis(random_sleep));
       match leading_zeros.parse::<u32>() {
         Ok(value) => {
