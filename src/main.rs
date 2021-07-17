@@ -36,6 +36,7 @@ fn main() {
 
     let mut blockchain = blockchain::Blockchain::new();
 
+    blockchain.new_transaction("Herencia McAffee".to_string(), 9999.0 as i64);
     /*
     let genesis = &blockchain.blocks[0];
     println!("Bloque genesis: {:p}", &genesis);
@@ -47,7 +48,8 @@ fn main() {
 
     return;
     */
-    
+    let mut count = 1;
+
     loop{
         println!();
         
@@ -83,6 +85,11 @@ fn main() {
                     },
                     false => {
                         blockchain.generate_new_block();
+                        blockchain.new_transaction(
+                            format!("Dummy_{}", count),
+                            9999.0 as i64
+                        );
+                        count += 1;
                     }
                 }
             },

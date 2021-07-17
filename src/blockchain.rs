@@ -24,6 +24,7 @@ pub struct Block {
   pub block_nonce: u64,
   pub transaction_list: Vec<Transaction>,
   previous_block_hash: String,
+  pub miner: u32,
 }
 
 impl Block {
@@ -41,6 +42,7 @@ impl Block {
         block_nonce: 0,
         transaction_list: vec![transaction],
         previous_block_hash: String::from("0"),
+        miner: 0,
     }
   }
   
@@ -130,6 +132,7 @@ impl Blockchain {
       block_nonce: 0,
       transaction_list: vec![reward_transaction],
       previous_block_hash: self.blocks.last().unwrap().get_hash(),
+      miner: 0,
     };
 
     let mut mined_block = self.proof_of_work(new_block);
@@ -137,7 +140,7 @@ impl Blockchain {
     mined_block.transaction_list.append(&mut self.current_transaction_list);
 
     self.blocks.push(mined_block);
-    self.difficulty += 1;
+    //self.difficulty += 1;
 
     return true;
   }
@@ -150,70 +153,9 @@ impl Blockchain {
     self.miners = miners;
   }
 
-  pub fn proof_of_work(self: &Self, mut original_block: Block) -> Block {
-    
-    let mut miners = vec![];
-    
-    let mut _found = Arc::new(AtomicBool::new(false));
+  pub fn proof_of_work(self: &Self, mut block: Block) -> Block {
+    let mut rng = rand::thread_rng();
 
-    for i in 0..self.miners {
-      let found = _found.clone();
-      let mut block = original_block.clone();
-      let difficulty = self.difficulty.clone();
-      let join_handle: thread::JoinHandle<(Option<u64>)> = thread::spawn( move || {
-
-      //println!("This is thread number {}", i);
-      //println!("{} Referencia a Found: {:p}", i, &test);
-      //return i;
-        let mut rng = rand::thread_rng();
-        while ! found.load(Ordering::Relaxed) {
-          let hash = block.get_hash();
-          let leading_zeros = &hash[0..difficulty as usize];
-          log(format!("[Miner-{}] Obtained hash : {}", i, hash));
-              
-          let random_sleep: u64 = rng.gen_range(100, 500);
-          log(format!("[Miner-{}] Va a hacer un sleep de  {}", i, random_sleep));
-          //sleep(Duration::from_millis(random_sleep));
-          
-          match leading_zeros.parse::<u32>() {
-            Ok(value) => {
-              if value != 0 {
-                block.block_nonce += 1;
-              } else {
-                if ! found.load(Ordering::Relaxed) {
-                  println!("Winner Miner is {}", i);
-                  found.swap(true, Ordering::Relaxed);
-                  return Some(block.block_nonce);
-                }
-              }
-              }
-              Err(_) => {
-                block.block_nonce += 1;
-                continue;
-              }
-            }
-        }
-        return None;
-      });
-      miners.push(join_handle);  
-    };
-
-    for miner in miners {
-      let x = miner.join();
-      match x {
-        Ok(result) => {
-          //println!("MAIN {}", result);
-          //original_block.block_nonce = v;
-          match result {
-            Some(x) => original_block.block_nonce = x,
-            None => ()
-          }
-        }
-        Err(e) => { println!( "Error: {:?}", e ); },
-      }
-    }
-
-    /*
     loop {
       let hash = block.get_hash();
       let leading_zeros = &hash[0..self.difficulty as usize];
@@ -225,6 +167,7 @@ impl Blockchain {
         Ok(value) => {
           if value != 0 {
             block.block_nonce += 1;
+            block.miner = 1;
           } else {
             return block;
           }
@@ -235,8 +178,6 @@ impl Blockchain {
         }
       }
     }
-    */
-    return original_block;
   }
 }
 
