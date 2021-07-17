@@ -75,7 +75,7 @@ impl Blockchain {
       current_transaction_list: vec![],
       reward: 100,
       difficulty: 1,
-      miners: 1,
+      miners: 3,
     }
   }
 
@@ -154,28 +154,79 @@ impl Blockchain {
   }
 
   pub fn proof_of_work(self: &Self, block: &mut Block) {
-    let mut rng = rand::thread_rng();
+    let mut miners = vec![];
+    let found_arc = Arc::new(Mutex::new(false));
+
     log(format!("Mining block number: {}", block.block_number));
 
-    loop {
-      let hash = block.get_hash();
-      let leading_zeros = &hash[0..self.difficulty as usize];
-      log(format!("[Miner] Obtained hash : {}", hash));
-              
-      let random_sleep: u64 = rng.gen_range(10, 200);
-      sleep(Duration::from_millis(random_sleep));
-      match leading_zeros.parse::<u32>() {
-        Ok(value) => {
-          if value != 0 {
-            block.block_nonce += 1;
-          } else {
-            block.miner = 1;
-            break;
+    for i in 0..self.miners {
+      let mut block_clone = block.clone();
+      let difficulty = self.difficulty.clone();
+      let found_clone = found_arc.clone();
+
+      let join_handle = thread::spawn(move || {
+        let mut rng = rand::thread_rng();
+        let mut found_flag;
+        
+        // Leo del mutex
+        { 
+          let found = found_clone.lock().unwrap();
+          found_flag = *found;
+        }
+        // Loop de minado
+        while ! found_flag {
+          let hash = block_clone.get_hash();
+          let leading_zeros = &hash[0..difficulty as usize];
+          log(format!("[Miner-{}] Obtained hash : {}", i+1, hash));
+                  
+          let random_sleep: u64 = rng.gen_range(10, 200);
+          sleep(Duration::from_millis(random_sleep));
+          match leading_zeros.parse::<u32>() {
+            Ok(value) => {
+              if value != 0 {
+                block_clone.block_nonce += 1;
+              } else {
+                // Vuelvo a acceder al Mutex
+                let mut found = found_clone.lock().unwrap();
+                if !*found {
+                  // Soy el primer minero que lo encontró
+                  *found = true;
+                  log(format!("[Miner-{}] Mining Complete", i+1));
+                  return Some((i+1, block_clone.block_nonce));
+                } else {
+                  return None;
+                }
+              }
+            }
+            Err(_) => {
+              block_clone.block_nonce += 1;
+              continue;
+            }
+          }
+          // Leo del mutex
+          { 
+            let found = found_clone.lock().unwrap();
+            found_flag = *found;
           }
         }
-        Err(_) => {
-          block.block_nonce += 1;
-          continue;
+        // Fin Loop de minado
+        return None;
+      });
+      miners.push(join_handle);
+    }
+    for miner in miners {
+      let x = miner.join();
+      match x {
+        Err (e) => (),
+        Ok(result) => {
+          match result {
+            None => (),
+            Some(tup) => {
+              let (minero_id, nonce) = tup;
+              block.block_nonce = nonce;
+              block.miner = minero_id;
+            }
+          }
         }
       }
     }
