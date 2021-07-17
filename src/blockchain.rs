@@ -126,7 +126,7 @@ impl Blockchain {
       amount: self.reward
     };
 
-    let new_block = Block {
+    let mut new_block = Block {
       block_number: self.blocks.len() + 1,
       block_timestamp: Utc::now().timestamp(),
       block_nonce: 0,
@@ -135,11 +135,13 @@ impl Blockchain {
       miner: 0,
     };
 
-    let mut mined_block = self.proof_of_work(new_block);
+    {
+      self.proof_of_work(&mut new_block);
+    }
 
-    mined_block.transaction_list.append(&mut self.current_transaction_list);
+    new_block.transaction_list.append(&mut self.current_transaction_list);
 
-    self.blocks.push(mined_block);
+    self.blocks.push(new_block);
     //self.difficulty += 1;
 
     return true;
@@ -153,7 +155,7 @@ impl Blockchain {
     self.miners = miners;
   }
 
-  pub fn proof_of_work(self: &Self, mut block: Block) -> Block {
+  pub fn proof_of_work(self: &Self, block: &mut Block) {
     let mut rng = rand::thread_rng();
 
     loop {
@@ -169,7 +171,7 @@ impl Blockchain {
             block.block_nonce += 1;
             block.miner = 1;
           } else {
-            return block;
+            break;
           }
         }
         Err(_) => {
