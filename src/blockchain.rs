@@ -135,9 +135,7 @@ impl Blockchain {
       miner: 0,
     };
 
-    {
-      self.proof_of_work(&mut new_block);
-    }
+    self.proof_of_work(&mut new_block);
 
     new_block.transaction_list.append(&mut self.current_transaction_list);
 
@@ -156,6 +154,7 @@ impl Blockchain {
   }
 
   pub fn proof_of_work(self: &Self, block: &mut Block) {
+    let mut miners = vec![];
     let mut rng = rand::thread_rng();
 
     loop {
@@ -169,8 +168,8 @@ impl Blockchain {
         Ok(value) => {
           if value != 0 {
             block.block_nonce += 1;
-            block.miner = 1;
           } else {
+            block.miner = 1;
             break;
           }
         }
