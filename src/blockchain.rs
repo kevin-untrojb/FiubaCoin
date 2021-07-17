@@ -154,8 +154,8 @@ impl Blockchain {
   }
 
   pub fn proof_of_work(self: &Self, block: &mut Block) {
-    let mut miners = vec![];
     let mut rng = rand::thread_rng();
+    log(format!("Mining block number: {}", block.block_number));
 
     loop {
       let hash = block.get_hash();
