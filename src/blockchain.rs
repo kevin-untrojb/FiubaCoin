@@ -16,6 +16,10 @@ pub struct Transaction {
   pub transaction_details: String,
   pub amount: i64,
 }
+trait GenericBlock{
+  fn new(previusBlock: String) -> Self;
+  fn lastBlock(&self) -> String;
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Block {
@@ -54,6 +58,22 @@ impl Block {
 
   pub fn add_transaction(self: &mut Self, transaction: Transaction) {
     self.transaction_list.push(transaction);
+  }
+}
+
+impl GenericBlock for Block{
+  fn new(previusBlock: String ) -> Block {
+    Block {
+      block_number: 1,
+      block_timestamp: Utc::now().timestamp(),
+      block_nonce: 0,
+      transaction_list: vec![transaction],
+      previous_block_hash: previusBlock,
+    }
+  }
+
+  fn lastBlock(&self) -> String{
+    self.previous_block_hash
   }
 }
 
@@ -405,5 +425,13 @@ mod tests {
     let mined_block = blockchain.proof_of_work(new_block);
 
     assert_eq!(String::from("0"), mined_block.get_hash()[0..1]);
+  }
+  #[test]
+  fn test_generic_block_new() {
+    let lastBlockStr = String::from("test-hash-number");
+    let mut newBolock: Block = GenericBlock::new(lastBlockStr);
+
+
+    assert_eq!(lastBlockStr, newBolock.lastBlock());
   }
 }
