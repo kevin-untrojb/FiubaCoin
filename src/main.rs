@@ -1,12 +1,18 @@
 mod blockchain;
 mod logger;
 
+
+use std::io::prelude::*;
+use std::net::TcpListener;
+use std::net::TcpStream;
 use std::io;
 use std::process;
 use std::io::Write;
+use serde_json::Result;
 
 
 fn main() {
+    let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
     logger::init(true);
     logger::log(format!("[Main] Program Start"));
     println!("Welcome to Fiuba Coin");
@@ -14,101 +20,82 @@ fn main() {
     let mut difficulty = String::new();
     let mut choice = String::new();
 
-    /*
-    let mut block = blockchain::Block::genesis();
-
-    println!("{}", block.serialize());
-    println!("Perno test");
-
-    let mut blockchain = blockchain::Blockchain::new();
-
-    println!("{:#?}", &blockchain);
-
-    println!("##########################");
-    blockchain.new_transaction(String::from("Transaction test"), 16);
-
-    println!("{:#?}", &blockchain);
-    println!("##########################");
-
-    blockchain.generate_new_block();
-    println!("{:#?}", &blockchain);
-    */
-
-    let mut blockchain = blockchain::Blockchain::new();
-
-    /*
-    let genesis = &blockchain.blocks[0];
-    println!("Bloque genesis: {:p}", &genesis);
-    println!("{:#?}", &genesis);
-
-    let mut copia_bloque = genesis.clone();
-    println!("Bloque copia: {:p}", &copia_bloque);
-    println!("{:#?}", &copia_bloque);
-
-    return;
-    */
-    
-    loop{
-        println!();
+    for stream in listener.incoming() {
+        let mut stream = stream.unwrap();
+        let mut buffer = [0;1024];
+        stream.read(&mut buffer).unwrap();
+        let block_request = b"GET /blockchain HTTP/1.1\r\n";
+        if buffer.starts_with(block_request){
+            let result = String::from("Hola mundo");
+            let response = format!(
+                "HTTP/1.1 200 OK \r\n Content-Length: \r\n{}",
+                result
+            );
+            stream.write(response.as_bytes()).unwrap();
+            let mut blockchain = blockchain::Blockchain::new();
+            loop{
+                println!();
+                
+                println!("");
         
-        //println!("{:#<30}");
-        println!("");
-
-        println!("Menu");
-        println!("1) New Transaction");
-        println!("2) Mine Block");
-        println!("3) Change Reward");
-        println!("4) Change Miners Ammount");
-        println!("5) Show current blockchain");
-        println!("0) Exit");
-        println!("Enter your choice: ");
-        io::stdout().flush();
-        choice.clear();
-        io::stdin().read_line(&mut choice);
-        println!("");
-
-        match choice.trim().parse().unwrap(){
-            0 => {
-                println!("Exiting");
-                process::exit(0);
-            },
-            1 => {
-                process_transaction(&mut blockchain);
-            },
-            2 => {
-                match blockchain.is_transaction_empty() {
-                    true => {
-                        println!("No transactions to Mine...Press enter to continue");
-                        io::stdin().read_line(&mut choice);
+                println!("Menu");
+                println!("1) New Transaction");
+                println!("2) Mine Block");
+                println!("3) Change Reward");
+                println!("4) Change Miners Ammount");
+                println!("5) Show current blockchain");
+                println!("0) Exit");
+                println!("Enter your choice: ");
+                io::stdout().flush();
+                choice.clear();
+                io::stdin().read_line(&mut choice);
+                println!("");
+        
+                match choice.trim().parse().unwrap(){
+                    0 => {
+                        println!("Exiting");
+                        process::exit(0);
                     },
-                    false => {
-                        blockchain.generate_new_block();
-                    }
+                    1 => {
+                        process_transaction(&mut blockchain);
+                    },
+                    2 => {
+                        match blockchain.is_transaction_empty() {
+                            true => {
+                                println!("No transactions to Mine...Press enter to continue");
+                                io::stdin().read_line(&mut choice);
+                            },
+                            false => {
+                                blockchain.generate_new_block();
+                            }
+                        }
+                    },
+                    3 => {
+                        let mut reward = String::new();
+                        print!("Enter new reward: ");
+                        io::stdout().flush();
+                        reward.clear();
+                        io::stdin().read_line(&mut reward);
+                        blockchain.change_reward(reward.trim().parse().unwrap());
+                    },
+                    4 => {
+                        let mut miners = String::new();
+                        print!("Enter Miners quantity: ");
+                        io::stdout().flush();
+                        miners.clear();
+                        io::stdin().read_line(&mut miners);
+                        blockchain.set_miners(miners.trim().parse().unwrap());
+                    },
+                    5 => {
+                        println!("Current Blockchain:");
+                        println!("{:#?}", &blockchain);
+                    },
+                    _ => println!("Invalid option please retry"),
                 }
-            },
-            3 => {
-                let mut reward = String::new();
-                print!("Enter new reward: ");
-                io::stdout().flush();
-                reward.clear();
-                io::stdin().read_line(&mut reward);
-                blockchain.change_reward(reward.trim().parse().unwrap());
-            },
-            4 => {
-                let mut miners = String::new();
-                print!("Enter Miners quantity: ");
-                io::stdout().flush();
-                miners.clear();
-                io::stdin().read_line(&mut miners);
-                blockchain.set_miners(miners.trim().parse().unwrap());
-            },
-            5 => {
-                println!("Current Blockchain:");
-                println!("{:#?}", &blockchain);
-            },
-            _ => println!("Invalid option please retry"),
+            }
         }
     }
+
 }
 
 fn process_transaction(blockchain: &mut blockchain::Blockchain) {
