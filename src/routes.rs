@@ -1,7 +1,11 @@
-use rocket::fairing::AdHoc;
-use rocket::Rocket;
+use rocket::http::RawStr;
+use rocket::http::Status;
+use rocket::response::status;
+use rocket_contrib::json::Json;
 use controller::blockchain_controllers::*;
+use rocket::Rocket;
 
+embed_migrations!();
 
 pub fn rocket() -> Rocket {
     let rocket = rocket::ignite()

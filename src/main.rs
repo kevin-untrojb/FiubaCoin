@@ -1,6 +1,9 @@
 mod blockchain;
 mod logger;
+mod routes;
 
+#[macro_use]
+extern crate rocket;
 
 use std::io::prelude::*;
 use std::net::TcpListener;
@@ -10,8 +13,10 @@ use std::process;
 use std::io::Write;
 use serde_json::Result;
 
-
-fn main() {
+fn main(){
+    routes::rocket().launch()
+}
+fn main2() {
     let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
     logger::init(true);
     logger::log(format!("[Main] Program Start"));
