@@ -12,7 +12,6 @@ use serde_json::Result;
 
 
 fn main() {
-    let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
     logger::init(true);
     logger::log(format!("[Main] Program Start"));
     println!("Welcome to Fiuba Coin");
@@ -20,20 +19,9 @@ fn main() {
     let mut difficulty = String::new();
     let mut choice = String::new();
 
-    for stream in listener.incoming() {
-        let mut stream = stream.unwrap();
-        let mut buffer = [0;1024];
-        stream.read(&mut buffer).unwrap();
-        let block_request = b"GET /blockchain HTTP/1.1\r\n";
-        if buffer.starts_with(block_request){
-            let result = String::from("Hola mundo");
-            let response = format!(
-                "HTTP/1.1 200 OK \r\n Content-Length: \r\n{}",
-                result
-            );
-            stream.write(response.as_bytes()).unwrap();
-            let mut blockchain = blockchain::Blockchain::new();
-            loop{
+    let mut blockchain = blockchain::Blockchain::new();
+    
+    loop{
                 println!();
                 
                 println!("");
@@ -93,8 +81,8 @@ fn main() {
                     _ => println!("Invalid option please retry"),
                 }
             }
-        }
-    }
+        
+    
 
 }
 

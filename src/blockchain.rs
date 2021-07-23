@@ -406,4 +406,45 @@ mod tests {
 
     assert_eq!(String::from("0"), mined_block.get_hash()[0..1]);
   }
+
+  #[test]
+  fn test_debug_macro() {
+    let mut blockchain = Blockchain::new();
+
+    blockchain.set_difficulty(5);
+
+    let new_block = Block {
+      block_number: 1,
+      block_timestamp: Utc::now().timestamp(),
+      block_nonce: 0,
+      transaction_list: vec![],
+      previous_block_hash: String::from("00"),
+    };
+    println!("This is an example of a Block {:?}",new_block);
+
+    let mined_block = blockchain.proof_of_work(new_block);
+
+    assert_eq!(String::from("0"), mined_block.get_hash()[0..1]);
+  }
+
+  #[test]
+  fn test_clone_macro() {
+    let mut blockchain = Blockchain::new();
+
+    blockchain.set_difficulty(5);
+
+    let transac = Transaction {
+      transaction_id: String::from("Nueva trans"),
+      transaction_timestamp: Utc::now().timestamp(),
+      transaction_details: String::from("probando"),
+      amount: 7677
+    };
+    let copy_trans = transac.clone();
+
+    println!("This is an example of a Transaction {:?}",transac);
+
+    println!("This is an example of a copy trans {:?}",copy_trans);
+
+    //assert_eq!(transac, copy_trans);
+  }
 }
