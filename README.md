@@ -2,7 +2,9 @@
 Blockchain hecha en lenguaje Rust para la asignatura Teoria del Lenguaje
 
 ## Setup
-Run `cargo build`
+Compile `cargo build`
+
+Run `cargo run`
 
 ## Tests
 Run `cargo test`
