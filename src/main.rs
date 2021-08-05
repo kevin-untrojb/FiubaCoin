@@ -95,7 +95,6 @@ fn main() {
             }
         }
     }
-
 }
 
 fn process_transaction(blockchain: &mut blockchain::Blockchain) {
